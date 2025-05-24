@@ -24,13 +24,14 @@ if (isset($_GET['toggle']) && isset($_GET['id'])) {
         $_SESSION['message'] = 'Experience visibility updated successfully!';
     }
     
-    header('Location: experience.php');
+    header('Location: experience.php?resume_id=' . $resumeId);
     exit;
 }
 
 // Handle delete
 if (isset($_GET['delete']) && isset($_GET['id'])) {
     $id = (int)$_GET['id'];
+    $resumeId = isset($_GET['resume_id']) ? (int)$_GET['resume_id'] : null;
     
     // Start transaction to delete experience and related accomplishments
     $db->beginTransaction();
@@ -99,7 +100,7 @@ require_once '../includes/header.php';
                             <i class="fas fa-briefcase fa-4x text-muted mb-4"></i>
                             <h3>No Work Experience Added</h3>
                             <p class="text-muted mb-4">You haven't added any work experience to your resume yet.</p>
-                            <a href="experience_add.php" class="btn btn-primary btn-lg px-4">
+                            <a href="experience_add.php?resume_id=<?php echo $resumeId; ?>" class="btn btn-primary btn-lg px-4">
                                 <i class="fas fa-plus-circle me-2"></i>Add Your First Job
                             </a>
                         </div>
@@ -233,7 +234,7 @@ require_once '../includes/header.php';
                 const title = button.getAttribute('data-title');
                 
                 document.getElementById('deleteItemTitle').textContent = title;
-                document.getElementById('confirmDeleteBtn').href = 'experience.php?delete=1&id=' + id;
+                document.getElementById('confirmDeleteBtn').href = 'experience.php?delete=1&id=' + id + '&resume_id=' + <?php echo $resumeId; ?>;
             });
         }
     });

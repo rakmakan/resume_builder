@@ -30,11 +30,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $dateRange = trim($_POST['date_range'] ?? '');
     $accomplishments = $_POST['accomplishments'] ?? [];
     $isVisible = isset($_POST['is_visible']) ? 1 : 0;
+    $resumeId = (int)($_POST['resume_id'] ?? 0); // Get resume_id from POST data
     
     // Validate input
-    if (empty($jobTitle) || empty($company)) {
-        $_SESSION['message'] = 'Error: Job title and company are required.';
-        header('Location: experience_add.php');
+    if (empty($jobTitle) || empty($company) || empty($resumeId)) {
+        $_SESSION['message'] = 'Error: Job title, company, and resume ID are required.';
+        header('Location: experience_add.php?resume_id=' . $resumeId);
         exit;
     }
     
@@ -91,6 +92,7 @@ require_once '../includes/header.php';
             </div>
             <div class="card-body">
                 <form method="post" action="experience_add.php?resume_id=<?php echo $resumeId; ?>" id="experienceForm">
+                    <input type="hidden" name="resume_id" value="<?php echo $resumeId; ?>">
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <label for="job_title" class="form-label fw-bold">Job Title <span class="text-danger">*</span></label>

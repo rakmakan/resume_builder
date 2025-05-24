@@ -4,12 +4,18 @@ require_once '../database/db.php';
 // Get database instance
 $db = ResumeDB::getInstance();
 
-// Get experience ID and resume ID from URL
+// Get experience ID from URL
 $expId = isset($_GET['id']) ? (int)$_GET['id'] : null;
 $resumeId = isset($_GET['resume_id']) ? (int)$_GET['resume_id'] : null;
 
+// If resume_id is not provided, try to get it from the experience record
+if (!$resumeId && $expId) {
+    $expDetails = $db->querySingle("SELECT resume_id FROM experience WHERE id = ?", [$expId]);
+    $resumeId = $expDetails ? $expDetails['resume_id'] : null;
+}
+
 if (!$expId || !$resumeId) {
-    die("Missing required parameters");
+    die("Missing required parameters. Please go back and try again.");
 }
 
 // Get resume details
@@ -49,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Update experience
     $db->execute(
         "UPDATE experience 
-         SET company = ?, title = ?, date_range = ?, location = ? 
+         SET company = ?, job_title = ?, date_range = ?, location = ? 
          WHERE id = ? AND resume_id = ?",
         [$company, $title, $dateRange, $location, $expId, $resumeId]
     );
@@ -99,7 +105,7 @@ require_once '../includes/header.php';
                         <div class="col-md-6">
                             <label for="title" class="form-label fw-bold">Job Title <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="title" name="title" 
-                                   value="<?php echo htmlspecialchars($experience['title']); ?>" required>
+                                   value="<?php echo htmlspecialchars($experience['job_title']); ?>" required>
                             <div class="form-text">Your official position or role</div>
                         </div>
                         <div class="col-md-6">
