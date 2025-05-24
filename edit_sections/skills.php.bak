@@ -1,0 +1,166 @@
+<?php
+// Edit skills section
+require_once('common.php');
+
+// Process form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Get the form data
+    $skillsEntries = $_POST['skills'] ?? [];
+    
+    // Create the content for skills entries
+    $skillsContent = '';
+    foreach ($skillsEntries as $entry) {
+        if (!empty($entry['category']) && !empty($entry['list'])) {
+            $skillsContent .= '<p contenteditable="true"><span class="skill-category">' . htmlspecialchars($entry['category']) . '</span> ' . htmlspecialchars($entry['list']) . '</p>' . "\n";
+        }
+    }
+    
+    // Create the updated section HTML
+    $updatedSection = '
+    <section class="resume-section skills-section">
+        <h2>SKILLS</h2>
+        <div class="section-content">
+            <div class="skills-container">
+                ' . $skillsContent . '
+            </div>
+        </div>
+    </section>';
+    
+    // Update the section in the index.php file
+    updateSection($updatedSection, 'skills-section');
+    
+    // Redirect back to the admin dashboard
+    header('Location: ../admin.php');
+    exit;
+}
+
+// Load current content
+$indexHtml = loadIndexHtml();
+// In index.php, the skills section uses resume-section class
+$sectionHtml = extractSection($indexHtml, 'resume-section');
+
+// If section HTML is empty, create a basic structure
+if (empty($sectionHtml)) {
+    $sectionHtml = '<div class="resume-section"><h2 class="resume-section-title">Skills</h2><div class="resume-section-content"></div></div>';
+}
+
+// Initialize skills array
+$skills = [];
+
+// Parse the section content to get current values
+$dom = new DOMDocument();
+libxml_use_internal_errors(true);
+$dom->loadHTML($sectionHtml);
+libxml_clear_errors();
+
+$xpath = new DOMXPath($dom);
+// Match the structure in index.php for skills
+$skillsEntries = $xpath->query('//div[@class="resume-item"]');
+
+    foreach ($skillsEntries as $entry) {
+        $categoryElement = $xpath->query('.//span[@class="skill-category"]', $entry)->item(0);
+        $category = $categoryElement ? $categoryElement->textContent : '';
+        
+        // Get the full text and extract skills list part (everything after the category)
+        $fullText = $entry->textContent;
+        $list = '';
+        
+        if ($category && strpos($fullText, $category) !== false) {
+            $list = trim(substr($fullText, strpos($fullText, $category) + strlen($category)));
+        }
+        
+        $skills[] = [
+            'category' => $category,
+            'list' => $list
+        ];
+    }
+}
+
+// Display the edit form
+displayHeader('Edit Skills');
+?>
+
+<form class="edit-form" method="post">
+    <div class="dynamic-fields" id="skills-fields">
+        <?php foreach ($skills as $index => $entry): ?>
+        <div class="dynamic-field">
+            <div class="form-group">
+                <label for="skills[<?php echo $index; ?>][category]">Skill Category:</label>
+                <input type="text" id="skills[<?php echo $index; ?>][category]" name="skills[<?php echo $index; ?>][category]" class="form-control" value="<?php echo htmlspecialchars($entry['category']); ?>" required>
+                <small>Example: Programming, Cloud, Machine Learning, etc.</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="skills[<?php echo $index; ?>][list]">Skills List:</label>
+                <textarea id="skills[<?php echo $index; ?>][list]" name="skills[<?php echo $index; ?>][list]" class="form-control" required><?php echo htmlspecialchars($entry['list']); ?></textarea>
+                <small>Format: Comma-separated list of skills (e.g., Python, JavaScript, TypeScript, SQL, Java)</small>
+            </div>
+            
+            <?php if ($index > 0): ?>
+            <button type="button" class="btn remove-field" onclick="removeField(this)">Remove Category</button>
+            <?php endif; ?>
+        </div>
+        <?php endforeach; ?>
+        
+        <?php if (empty($skills)): ?>
+        <div class="dynamic-field">
+            <div class="form-group">
+                <label for="skills[0][category]">Skill Category:</label>
+                <input type="text" id="skills[0][category]" name="skills[0][category]" class="form-control" required>
+                <small>Example: Programming, Cloud, Machine Learning, etc.</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="skills[0][list]">Skills List:</label>
+                <textarea id="skills[0][list]" name="skills[0][list]" class="form-control" required></textarea>
+                <small>Format: Comma-separated list of skills (e.g., Python, JavaScript, TypeScript, SQL, Java)</small>
+            </div>
+        </div>
+        <?php endif; ?>
+    </div>
+    
+    <div class="field-actions">
+        <button type="button" class="btn add-field" onclick="addSkillsField()">Add Skill Category</button>
+    </div>
+    
+    <div class="form-group">
+        <button type="submit" class="btn">Save Changes</button>
+    </div>
+</form>
+
+<script>
+function addSkillsField() {
+    const container = document.getElementById('skills-fields');
+    const fieldCount = container.getElementsByClassName('dynamic-field').length;
+    
+    const newField = document.createElement('div');
+    newField.className = 'dynamic-field';
+    
+    newField.innerHTML = `
+        <div class="form-group">
+            <label for="skills[${fieldCount}][category]">Skill Category:</label>
+            <input type="text" id="skills[${fieldCount}][category]" name="skills[${fieldCount}][category]" class="form-control" required>
+            <small>Example: Programming, Cloud, Machine Learning, etc.</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="skills[${fieldCount}][list]">Skills List:</label>
+            <textarea id="skills[${fieldCount}][list]" name="skills[${fieldCount}][list]" class="form-control" required></textarea>
+            <small>Format: Comma-separated list of skills (e.g., Python, JavaScript, TypeScript, SQL, Java)</small>
+        </div>
+        
+        <button type="button" class="btn remove-field" onclick="removeField(this)">Remove Category</button>
+    `;
+    
+    container.appendChild(newField);
+}
+
+function removeField(button) {
+    const fieldDiv = button.parentNode;
+    fieldDiv.parentNode.removeChild(fieldDiv);
+}
+</script>
+
+<?php
+displayFooter();
+?>
