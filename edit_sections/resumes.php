@@ -233,12 +233,12 @@ require_once '../includes/header.php';
                             <td>
                                 <span class="resume-name" data-id="<?php echo $resume['id']; ?>">
                                     <?php echo htmlspecialchars($resume['name']); ?>
-                                </span>
+                            </span>
                             </td>
                             <td>
                                 <span class="resume-description" data-id="<?php echo $resume['id']; ?>">
                                     <?php echo htmlspecialchars($resume['description']); ?>
-                                </span>
+                            </span>
                             </td>
                             <td><?php echo date('M j, Y', strtotime($resume['updated_at'])); ?></td>
                             <td>
@@ -246,14 +246,17 @@ require_once '../includes/header.php';
                                     <span class="badge bg-success">Default</span>
                                 <?php endif; ?>
                             </td>
-                            <td>
-                                <div class="btn-group" role="group">
-                                    <a href="../edit_sections/personal_info.php?resume_id=<?php echo $resume['id']; ?>" 
+                            <td>                            <div class="btn-group" role="group">
+                                <a href="../index.php?resume_id=<?php echo $resume['id']; ?>" target="_blank" 
+                                   class="btn btn-sm btn-outline-info" title="Preview Resume">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="../edit_sections/personal_info.php?resume_id=<?php echo $resume['id']; ?>" 
                                        class="btn btn-sm btn-outline-primary" title="Edit Resume">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <a href="../export.php?id=<?php echo $resume['id']; ?>" 
-                                       class="btn btn-sm btn-outline-primary" title="Download">
+                                       class="btn btn-sm btn-outline-success" title="Download">
                                         <i class="fas fa-download"></i>
                                     </a>
                                     <button type="button" 

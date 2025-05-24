@@ -1,6 +1,11 @@
-<!DOCTYPE html>
-<?php 
+<?php
 require_once 'database/db.php';
+
+// Only redirect to resumes.php if no resume_id is provided
+if (!isset($_GET['resume_id'])) {
+    header('Location: edit_sections/resumes.php');
+    exit;
+}
 
 // Get database instance
 $db = ResumeDB::getInstance();
