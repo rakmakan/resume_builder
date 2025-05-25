@@ -25,3 +25,5 @@ Thumbs.db
 *.old
 *.backup
 test_output.txt
+
+python_backend/

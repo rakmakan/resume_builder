@@ -56,25 +56,48 @@ $projects = $db->query(
     [$resumeId]
 );
 
-// Debug output
+// Debug output for each section
 error_log("Personal Info: " . print_r($personal, true));
+error_log("Summary: " . print_r($summary, true));
 error_log("Experiences Count: " . count($experiences));
+error_log("Education Count: " . count($education));
+error_log("Skill Categories Count: " . count($skillCategories));
+error_log("Projects Count: " . count($projects));
+
+// Reset arrays and ensure unique entries
+$experiences = array_values(array_unique($experiences, SORT_REGULAR));
+$skillCategories = array_values(array_unique($skillCategories, SORT_REGULAR));
+
+// Clear existing arrays before populating related data
+foreach ($experiences as &$exp) {
+    $exp['accomplishments'] = [];
+}
+unset($exp); // unset reference to last element
+
+foreach ($skillCategories as &$category) {
+    $category['skills'] = [];
+}
+unset($category); // unset reference to last element
 
 // Get accomplishments for each experience
 foreach ($experiences as &$exp) {
-    $exp['accomplishments'] = $db->query(
-        "SELECT * FROM job_accomplishments WHERE experience_id = ? AND resume_id = ? ORDER BY display_order", 
+    $exp['accomplishments'] = array_values($db->query(
+        "SELECT DISTINCT * FROM job_accomplishments WHERE experience_id = ? AND resume_id = ? ORDER BY display_order", 
         [$exp['id'], $resumeId]
-    );
+    ));
+    error_log("Accomplishments for experience {$exp['id']}: " . count($exp['accomplishments']));
 }
+unset($exp); // unset reference to last element
 
 // Get skills for each category
 foreach ($skillCategories as &$category) {
-    $category['skills'] = $db->query(
-        "SELECT * FROM skills WHERE category_id = ? AND resume_id = ? AND is_visible = 1 ORDER BY display_order", 
+    $category['skills'] = array_values($db->query(
+        "SELECT DISTINCT * FROM skills WHERE category_id = ? AND resume_id = ? AND is_visible = 1 ORDER BY display_order", 
         [$category['id'], $resumeId]
-    );
+    ));
+    error_log("Skills for category {$category['id']}: " . count($category['skills']));
 }
+unset($category); // unset reference to last element
 
 // Parse contact info (stored as pipe-separated values)
 $contactInfo = [];
@@ -221,10 +244,17 @@ error_log("Resume Name: " . $resumeName);
                 
                 <!-- Experience Section -->
                 <?php if (count($experiences) > 0): ?>
+                <?php $displayedExperiences = []; ?>
                 <div class="experience-section resume-section">
                     <h2>Professional Experience</h2>
                     <div class="section-content">
                         <?php foreach ($experiences as $exp): ?>
+                        <?php 
+                        // Skip if we've already displayed this experience
+                        $expKey = $exp['id'] . '-' . $exp['job_title'] . '-' . $exp['company'];
+                        if (in_array($expKey, $displayedExperiences)) continue;
+                        $displayedExperiences[] = $expKey;
+                        ?>
                         <div class="experience-entry mb-4">
                             <div class="experience-row-1">
                                 <div class="job-company">
@@ -304,18 +334,25 @@ error_log("Resume Name: " . $resumeName);
                 
                 <!-- Skills Section -->
                 <?php if (count($skillCategories) > 0): ?>
+                <?php $displayedCategories = []; ?>
                 <div class="skills-section resume-section">
                     <h2>Skills</h2>
                     <div class="section-content skills-container">
                         <?php foreach ($skillCategories as $category): ?>
+                            <?php 
+                            // Skip if we've already displayed this category
+                            $catKey = $category['id'] . '-' . $category['name'];
+                            if (in_array($catKey, $displayedCategories)) continue;
+                            $displayedCategories[] = $catKey;
+                            ?>
                             <?php if (!empty($category['skills'])): ?>
                                 <p>
                                     <span class="skill-category"><?php echo htmlspecialchars($category['name']); ?>:</span>
                                     <span class="skill-list">
                                         <?php 
-                                        $skillNames = array_map(function($skill) {
+                                        $skillNames = array_unique(array_map(function($skill) {
                                             return htmlspecialchars($skill['name']);
-                                        }, $category['skills']);
+                                        }, $category['skills']));
                                         echo implode(', ', $skillNames);
                                         ?>
                                     </span>

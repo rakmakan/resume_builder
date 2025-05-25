@@ -9,7 +9,7 @@ use Dompdf\Options;
 $db = ResumeDB::getInstance();
 
 // Get resume ID from URL parameter or use default resume
-$resumeId = isset($_GET['id']) ? (int)$_GET['id'] : null;
+$resumeId = isset($_GET['resume_id']) ? (int)$_GET['resume_id'] : null;
 
 if ($resumeId) {
     $resume = $db->querySingle("SELECT * FROM resumes WHERE id = ?", [$resumeId]);
@@ -18,50 +18,85 @@ if ($resumeId) {
     if (!$resume) {
         $resume = $db->querySingle("SELECT * FROM resumes ORDER BY created_at DESC LIMIT 1");
     }
+    $resumeId = $resume['id'];
 }
 
-// Get personal info
-$personal = $db->querySingle("SELECT * FROM personal_info WHERE resume_id = ? LIMIT 1", [$resume['id']]);
+// Get resume data
+$personal = $db->querySingle(
+    "SELECT * FROM personal_info WHERE resume_id = ? ORDER BY updated_at DESC LIMIT 1", 
+    [$resumeId]
+);
+$summary = $db->querySingle("SELECT * FROM summary WHERE resume_id = ?", [$resumeId]);
+$experiences = $db->query(
+    "SELECT * FROM experience WHERE resume_id = ? AND is_visible = 1 ORDER BY display_order, date_range DESC",
+    [$resumeId]
+);
+$education = $db->query(
+    "SELECT * FROM education WHERE resume_id = ? AND is_visible = 1 ORDER BY display_order, date_range DESC",
+    [$resumeId]
+);
+$skillCategories = $db->query(
+    "SELECT * FROM skill_categories WHERE resume_id = ? AND is_visible = 1 ORDER BY display_order",
+    [$resumeId]
+);
+$projects = $db->query(
+    "SELECT * FROM projects WHERE resume_id = ? AND is_visible = 1 ORDER BY display_order",
+    [$resumeId]
+);
 
-// Get contact info
-$contactInfo = [];
-if ($personal) {
-    $contacts = $db->query("SELECT * FROM contact_info WHERE personal_info_id = ? ORDER BY type", [$personal['id']]);
-    foreach ($contacts as $contact) {
-        $contactInfo[$contact['type']] = $contact['value'];
-    }
+// Reset arrays and ensure unique entries
+$experiences = array_values(array_unique($experiences, SORT_REGULAR));
+$skillCategories = array_values(array_unique($skillCategories, SORT_REGULAR));
+
+// Clear existing arrays before populating related data
+foreach ($experiences as &$exp) {
+    $exp['accomplishments'] = [];
 }
+unset($exp); // unset reference to last element
 
-// Get portfolio links
-$portfolioLinks = [];
-if ($personal) {
-    $portfolioLinks = $db->query(
-        "SELECT * FROM portfolio_links WHERE personal_info_id = ? ORDER BY display_order",
-        [$personal['id']]
-    );
+foreach ($skillCategories as &$category) {
+    $category['skills'] = [];
 }
-
-$summary = $db->querySingle("SELECT * FROM summary WHERE resume_id = ? LIMIT 1", [$resume['id']]);
-$experiences = $db->query("SELECT * FROM experience WHERE resume_id = ? AND is_visible = 1 ORDER BY display_order, date_range DESC", [$resume['id']]);
-$education = $db->query("SELECT * FROM education WHERE resume_id = ? AND is_visible = 1 ORDER BY display_order, date_range DESC", [$resume['id']]);
-$skillCategories = $db->query("SELECT * FROM skill_categories WHERE resume_id = ? AND is_visible = 1 ORDER BY display_order", [$resume['id']]);
-$projects = $db->query("SELECT * FROM projects WHERE resume_id = ? AND is_visible = 1 ORDER BY display_order", [$resume['id']]);
+unset($category); // unset reference to last element
 
 // Get accomplishments for each experience
 foreach ($experiences as &$exp) {
-    $exp['accomplishments'] = $db->query(
-        "SELECT * FROM job_accomplishments WHERE experience_id = ? ORDER BY display_order", 
-        [$exp['id']]
-    );
+    $exp['accomplishments'] = array_values($db->query(
+        "SELECT DISTINCT * FROM job_accomplishments WHERE experience_id = ? AND resume_id = ? ORDER BY display_order", 
+        [$exp['id'], $resumeId]
+    ));
 }
+unset($exp);
 
 // Get skills for each category
 foreach ($skillCategories as &$category) {
-    $category['skills'] = $db->query(
-        "SELECT * FROM skills WHERE category_id = ? AND is_visible = 1 ORDER BY display_order", 
-        [$category['id']]
-    );
+    $category['skills'] = array_values($db->query(
+        "SELECT DISTINCT * FROM skills WHERE category_id = ? AND resume_id = ? AND is_visible = 1 ORDER BY display_order", 
+        [$category['id'], $resumeId]
+    ));
 }
+unset($category);
+
+// Parse contact info (stored as pipe-separated values)
+$contactInfo = [];
+if ($personal && !empty($personal['contact_info'])) {
+    $contacts = explode('|', $personal['contact_info']);
+    foreach ($contacts as $contact) {
+        $contact = trim($contact);
+        if (strpos($contact, '@') !== false) {
+            $contactInfo['email'] = $contact;
+        } else if (preg_match('/^\+?[\d\s()\-]+$/', $contact)) {
+            $contactInfo['phone'] = $contact;
+        } else if (strpos($contact, 'github.com') !== false) {
+            $contactInfo['github'] = $contact;
+        } else if (strpos($contact, 'linkedin.com') !== false) {
+            $contactInfo['linkedin'] = $contact;
+        }
+    }
+}
+
+// Set resume name
+$resumeName = $resume ? $resume['name'] : 'Unknown Resume';
 
 // Generate resume HTML
 ob_start();
@@ -368,23 +403,20 @@ ob_start();
                 <div class="header-right">
                     <div class="contact-info">
                         <?php if (!empty($contactInfo['phone'])): ?>
-                            <span>☎ <?php echo htmlspecialchars($contactInfo['phone']); ?></span>
+                            <span><i class="fas fa-phone"></i> <?php echo htmlspecialchars($contactInfo['phone']); ?></span>
                         <?php endif; ?>
                         <?php if (!empty($contactInfo['email'])): ?>
-                            <span>✉ <?php echo htmlspecialchars($contactInfo['email']); ?></span>
+                            <span><i class="fas fa-envelope"></i> <?php echo htmlspecialchars($contactInfo['email']); ?></span>
+                        <?php endif; ?>
+                        <?php if (!empty($contactInfo['linkedin'])): ?>
+                            <span><i class="fab fa-linkedin"></i> <?php echo htmlspecialchars($contactInfo['linkedin']); ?></span>
+                        <?php endif; ?>
+                        <?php if (!empty($contactInfo['github'])): ?>
+                            <span><i class="fab fa-github"></i> <?php echo htmlspecialchars($contactInfo['github']); ?></span>
                         <?php endif; ?>
                     </div>
                 </div>
             </div>
-            <?php if (!empty($portfolioLinks)): ?>
-                <div class="profile-links">
-                    <?php foreach ($portfolioLinks as $link): ?>
-                        <a href="<?php echo htmlspecialchars($link['url']); ?>">
-                            <?php echo htmlspecialchars($link['platform']); ?>
-                        </a>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
         </div>
         
         <!-- Summary Section -->
@@ -399,10 +431,17 @@ ob_start();
         
         <!-- Experience Section -->
         <?php if (count($experiences) > 0): ?>
+        <?php $displayedExperiences = []; ?>
         <div class="experience-section resume-section">
             <h2>Professional Experience</h2>
             <div class="section-content">
                 <?php foreach ($experiences as $exp): ?>
+                <?php 
+                // Skip if we've already displayed this experience
+                $expKey = $exp['id'] . '-' . $exp['job_title'] . '-' . $exp['company'];
+                if (in_array($expKey, $displayedExperiences)) continue;
+                $displayedExperiences[] = $expKey;
+                ?>
                 <div class="experience-entry">
                     <div class="experience-row-1">
                         <div class="job-company">
@@ -446,13 +485,12 @@ ob_start();
                     <div class="education-entry">
                         <div class="education-row-1">
                             <div class="degree-institution">
-                                <span class="degree"><?php echo htmlspecialchars($edu['degree_type']); ?> in <?php echo htmlspecialchars($edu['major']); ?></span>
+                                <span class="degree"><?php echo htmlspecialchars($edu['degree']); ?></span>
                                 <span class="institution"><?php echo htmlspecialchars($edu['institution']); ?></span>
                             </div>
                             <div class="education-date">
-                                <?php if (!empty($edu['start_date'])): ?>
-                                    <?php echo htmlspecialchars($edu['start_date']); ?> - 
-                                    <?php echo $edu['currently_enrolled'] ? 'Present' : htmlspecialchars($edu['end_date']); ?>
+                                <?php if (!empty($edu['date_range'])): ?>
+                                    <?php echo htmlspecialchars($edu['date_range']); ?>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -462,12 +500,11 @@ ob_start();
                                 <?php if (!empty($edu['location'])): ?>
                                     <span class="location"><?php echo htmlspecialchars($edu['location']); ?></span>
                                 <?php endif; ?>
-                                <?php if (!empty($edu['minor'])): ?>
-                                    <span class="minor">Minor: <?php echo htmlspecialchars($edu['minor']); ?></span>
-                                <?php endif; ?>
                             </div>
-                            <?php if (!empty($edu['gpa'])): ?>
-                                <span class="education-gpa">GPA: <?php echo htmlspecialchars($edu['gpa']); ?></span>
+                            <?php if (!empty($edu['description'])): ?>
+                                <div class="education-description">
+                                    <?php echo htmlspecialchars($edu['description']); ?>
+                                </div>
                             <?php endif; ?>
                         </div>
                         
@@ -484,18 +521,25 @@ ob_start();
         
         <!-- Skills Section -->
         <?php if (count($skillCategories) > 0): ?>
+        <?php $displayedCategories = []; ?>
         <div class="skills-section resume-section">
             <h2>Skills</h2>
             <div class="section-content skills-container">
                 <?php foreach ($skillCategories as $category): ?>
+                    <?php 
+                    // Skip if we've already displayed this category
+                    $catKey = $category['id'] . '-' . $category['name'];
+                    if (in_array($catKey, $displayedCategories)) continue;
+                    $displayedCategories[] = $catKey;
+                    ?>
                     <?php if (!empty($category['skills'])): ?>
                         <p>
                             <span class="skill-category"><?php echo htmlspecialchars($category['name']); ?>:</span>
                             <span class="skill-list">
                                 <?php 
-                                $skillNames = array_map(function($skill) {
+                                $skillNames = array_unique(array_map(function($skill) {
                                     return htmlspecialchars($skill['name']);
-                                }, $category['skills']);
+                                }, $category['skills']));
                                 echo implode(', ', $skillNames);
                                 ?>
                             </span>
@@ -513,11 +557,15 @@ ob_start();
             <div class="section-content">
                 <?php foreach ($projects as $project): ?>
                     <div class="project-entry">
-                        <p><span class="project-title"><?php echo htmlspecialchars($project['title']); ?></span></p>
+                        <div class="project-title"><?php echo htmlspecialchars($project['title']); ?></div>
+                        <?php if (!empty($project['technologies'])): ?>
+                            <div class="project-tech"><?php echo htmlspecialchars($project['technologies']); ?></div>
+                        <?php endif; ?>
                         <?php if (!empty($project['description'])): ?>
-                            <div class="project-description">
-                                <p><?php echo nl2br(htmlspecialchars($project['description'])); ?></p>
-                            </div>
+                            <div class="project-description"><?php echo nl2br(htmlspecialchars($project['description'])); ?></div>
+                        <?php endif; ?>
+                        <?php if (!empty($project['link'])): ?>
+                            <div class="project-link"><a href="<?php echo htmlspecialchars($project['link']); ?>" target="_blank">Project Link</a></div>
                         <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
@@ -550,7 +598,8 @@ $dompdf->setPaper('A4', 'portrait');
 $dompdf->render();
 
 // Output the PDF for download
-$dompdf->stream('Rakshit_Resume.pdf', [
+$fileName = preg_replace('/[^a-zA-Z0-9]/', '_', $resumeName);
+$dompdf->stream($fileName . '.pdf', [
     'Attachment' => true // Set to true to download, false to display in browser
 ]);
 
