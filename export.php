@@ -77,22 +77,15 @@ foreach ($skillCategories as &$category) {
 }
 unset($category);
 
-// Parse contact info (stored as pipe-separated values)
+// Get personal info details from the new table
 $contactInfo = [];
-if ($personal && !empty($personal['contact_info'])) {
-    $contacts = explode('|', $personal['contact_info']);
-    foreach ($contacts as $contact) {
-        $contact = trim($contact);
-        if (strpos($contact, '@') !== false) {
-            $contactInfo['email'] = $contact;
-        } else if (preg_match('/^\+?[\d\s()\-]+$/', $contact)) {
-            $contactInfo['phone'] = $contact;
-        } else if (strpos($contact, 'github.com') !== false) {
-            $contactInfo['github'] = $contact;
-        } else if (strpos($contact, 'linkedin.com') !== false) {
-            $contactInfo['linkedin'] = $contact;
-        }
-    }
+$personalDetails = $db->query("SELECT * FROM personal_info_details WHERE resume_id = ?", [$resumeId]);
+foreach ($personalDetails as $detail) {
+    $key = strtolower($detail['detail_name']);
+    $contactInfo[$key] = [
+        'info' => $detail['detail_info'],
+        'icon' => $detail['detail_icon']
+    ];
 }
 
 // Set resume name
@@ -158,12 +151,25 @@ ob_start();
         }
 
         .header-main {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
+            width: 100%;
+            display: table;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-left {
+            display: table-cell;
+            vertical-align: top;
+            width: 60%;
+        }
+
+        .header-right {
+            display: table-cell;
+            vertical-align: top;
+            width: 40%;
         }
 
         .header-section h1 {
+            font-family: "DejaVu Sans", "Helvetica", Arial, sans-serif;
             font-size: 18px;
             font-weight: bold;
             color: #2c3e50;
@@ -173,25 +179,23 @@ ob_start();
         }
 
         .professional-headline {
+            font-family: "DejaVu Sans", "Helvetica", Arial, sans-serif;
             color: #666;
             font-size: 14px;
             margin-bottom: 0.5rem;
         }
 
         .contact-info {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            margin-top: 0;
             text-align: right;
+            line-height: 1.6;
         }
 
         .contact-info span {
-            display: inline-flex;
-            align-items: center;
-            justify-content: flex-end;
+            font-family: "DejaVu Sans", "Helvetica", Arial, sans-serif;
+            display: block;
             color: #555;
-            font-size: 14px;
+            font-size: 12px;
+            margin-bottom: 4px;
         }
 
         .contact-info i {
@@ -256,24 +260,28 @@ ob_start();
         }
 
         .degree {
+            font-family: "DejaVu Sans", "Helvetica", Arial, sans-serif;
             font-weight: bold;
             color: #000;
             font-size: 12px;
         }
 
         .institution {
+            font-family: "DejaVu Sans", "Helvetica", Arial, sans-serif;
             font-weight: 600;
             color: #333;
             font-size: 12px;
         }
 
         .education-date {
+            font-family: "DejaVu Sans", "Helvetica", Arial, sans-serif;
             color: #666;
             font-size: 12px;
             white-space: nowrap;
         }
 
         .location, .minor {
+            font-family: "DejaVu Sans", "Helvetica", Arial, sans-serif;
             color: #666;
             margin-right: 16px;
             font-size: 12px;
@@ -300,6 +308,7 @@ ob_start();
         }
 
         .skill-category {
+            font-family: "DejaVu Sans", "Helvetica", Arial, sans-serif;
             font-weight: bold;
             display: inline-block;
             min-width: 100px;
@@ -307,6 +316,7 @@ ob_start();
         }
 
         .skill-list {
+            font-family: "DejaVu Sans", "Helvetica", Arial, sans-serif;
             display: inline-block;
             vertical-align: top;
         }
@@ -331,24 +341,28 @@ ob_start();
         }
 
         .job-title {
+            font-family: "DejaVu Sans", "Helvetica", Arial, sans-serif;
             font-weight: bold;
             color: #000;
             font-size: 12px;
         }
 
         .company-name {
+            font-family: "DejaVu Sans", "Helvetica", Arial, sans-serif;
             font-weight: 600;
             color: #333;
             font-size: 12px;
         }
 
         .experience-date {
+            font-family: "DejaVu Sans", "Helvetica", Arial, sans-serif;
             color: #666;
             font-size: 12px;
             white-space: nowrap;
         }
 
         .company-location {
+            font-family: "DejaVu Sans", "Helvetica", Arial, sans-serif;
             color: #666;
             font-size: 12px;
         }
@@ -400,21 +414,14 @@ ob_start();
                         </div>
                     <?php endif; ?>
                 </div>
-                <div class="header-right">
-                    <div class="contact-info">
-                        <?php if (!empty($contactInfo['phone'])): ?>
-                            <span><i class="fas fa-phone"></i> <?php echo htmlspecialchars($contactInfo['phone']); ?></span>
-                        <?php endif; ?>
-                        <?php if (!empty($contactInfo['email'])): ?>
-                            <span><i class="fas fa-envelope"></i> <?php echo htmlspecialchars($contactInfo['email']); ?></span>
-                        <?php endif; ?>
-                        <?php if (!empty($contactInfo['linkedin'])): ?>
-                            <span><i class="fab fa-linkedin"></i> <?php echo htmlspecialchars($contactInfo['linkedin']); ?></span>
-                        <?php endif; ?>
-                        <?php if (!empty($contactInfo['github'])): ?>
-                            <span><i class="fab fa-github"></i> <?php echo htmlspecialchars($contactInfo['github']); ?></span>
-                        <?php endif; ?>
-                    </div>
+                <div class="header-right">                            <div class="contact-info">
+                                <?php foreach ($contactInfo as $type => $detail): ?>
+                                    <span>
+                                        <i class="<?php echo htmlspecialchars($detail['icon']); ?>"></i>
+                                        <?php echo htmlspecialchars($detail['info']); ?>
+                                    </span>
+                                <?php endforeach; ?>
+                            </div>
                 </div>
             </div>
         </div>

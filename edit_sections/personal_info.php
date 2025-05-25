@@ -12,34 +12,65 @@ $resumeName = getResumeName($db, $resumeId);
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = $_POST['name'] ?? '';
-    $contactInfo = $_POST['contact_info'] ?? '';
     
-    if (!empty($name) && !empty($contactInfo)) {
-        // Check if personal info exists for this resume
-        $existing = $db->querySingle("SELECT id FROM personal_info WHERE resume_id = ?", [$resumeId]);
-        
-        if ($existing) {
+    // First, update the main personal info
+    $existing = $db->querySingle("SELECT id FROM personal_info WHERE resume_id = ?", [$resumeId]);
+    
+    if ($existing) {
+        $db->execute(
+            "UPDATE personal_info SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE resume_id = ?",
+            [$name, $resumeId]
+        );
+    } else {
+        $db->execute(
+            "INSERT INTO personal_info (resume_id, name) VALUES (?, ?)",
+            [$resumeId, $name]
+        );
+    }
+    
+    // Handle personal info details
+    // First, remove all existing details for this resume
+    $db->execute("DELETE FROM personal_info_details WHERE resume_id = ?", [$resumeId]);
+    
+    // Add new details
+    $detailTypes = ['email', 'phone', 'github', 'linkedin'];
+    foreach ($detailTypes as $type) {
+        if (!empty($_POST[$type])) {
+            $icon = match($type) {
+                'email' => 'fas fa-envelope',
+                'phone' => 'fas fa-phone',
+                'github' => 'fab fa-github',
+                'linkedin' => 'fab fa-linkedin',
+                default => ''
+            };
+            
+            $detailName = ucfirst($type);
+            $detailInfo = $_POST[$type];
+            
             $db->execute(
-                "UPDATE personal_info SET name = ?, contact_info = ?, updated_at = CURRENT_TIMESTAMP WHERE resume_id = ?",
-                [$name, $contactInfo, $resumeId]
-            );
-        } else {
-            $db->execute(
-                "INSERT INTO personal_info (resume_id, name, contact_info) VALUES (?, ?, ?)",
-                [$resumeId, $name, $contactInfo]
+                "INSERT INTO personal_info_details (resume_id, detail_name, detail_icon, detail_info) 
+                 VALUES (?, ?, ?, ?)",
+                [$resumeId, $detailName, $icon, $detailInfo]
             );
         }
-        
-        $_SESSION['message'] = 'Personal information updated successfully!';
-        header("Location: personal_info.php?resume_id=" . $resumeId);
-        exit;
     }
+    
+    $_SESSION['message'] = 'Personal information updated successfully!';
+    header("Location: personal_info.php?resume_id=" . $resumeId);
+    exit;
 }
 
 // Get current personal info
 $personal = $db->querySingle("SELECT * FROM personal_info WHERE resume_id = ?", [$resumeId]);
 $currentName = $personal['name'] ?? '';
-$currentContactInfo = $personal['contact_info'] ?? '';
+
+// Get current details
+$details = $db->query("SELECT * FROM personal_info_details WHERE resume_id = ?", [$resumeId]);
+$currentDetails = [];
+foreach ($details as $detail) {
+    $key = strtolower($detail['detail_name']);
+    $currentDetails[$key] = $detail['detail_info'];
+}
 
 // Set page title and description
 $pageTitle = 'Edit Personal Information - ' . $resumeName;
@@ -85,19 +116,52 @@ require_once '../includes/header.php';
                         </div>
                         
                         <div class="mb-3">
-                            <label for="contact_info" class="form-label">Contact Information</label>
-                            <input type="text" 
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" 
                                    class="form-control" 
-                                   id="contact_info" 
-                                   name="contact_info" 
-                                   value="<?php echo htmlspecialchars($currentContactInfo); ?>" 
+                                   id="email" 
+                                   name="email" 
+                                   value="<?php echo htmlspecialchars($currentDetails['email'] ?? ''); ?>" 
                                    required>
-                            <div class="form-text">
-                                Separate multiple items with | (e.g., "email@example.com | (123) 456-7890 | github.com/username")
-                            </div>
                             <div class="invalid-feedback">
-                                Please enter your contact information
+                                Please enter a valid email address
                             </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <input type="tel" 
+                                   class="form-control" 
+                                   id="phone" 
+                                   name="phone" 
+                                   value="<?php echo htmlspecialchars($currentDetails['phone'] ?? ''); ?>"
+                                   pattern="^\+?[\d\s()\-]+$"
+                                   required>
+                            <div class="invalid-feedback">
+                                Please enter a valid phone number
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="linkedin" class="form-label">LinkedIn Profile URL</label>
+                            <input type="url" 
+                                   class="form-control" 
+                                   id="linkedin" 
+                                   name="linkedin" 
+                                   value="<?php echo htmlspecialchars($currentDetails['linkedin'] ?? ''); ?>"
+                                   placeholder="https://linkedin.com/in/yourusername">
+                            <div class="form-text">Optional: Add your LinkedIn profile URL</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="github" class="form-label">GitHub Profile URL</label>
+                            <input type="url" 
+                                   class="form-control" 
+                                   id="github" 
+                                   name="github" 
+                                   value="<?php echo htmlspecialchars($currentDetails['github'] ?? ''); ?>"
+                                   placeholder="https://github.com/yourusername">
+                            <div class="form-text">Optional: Add your GitHub profile URL</div>
                         </div>
                         
                         <div class="d-flex justify-content-between">

@@ -99,22 +99,15 @@ foreach ($skillCategories as &$category) {
 }
 unset($category); // unset reference to last element
 
-// Parse contact info (stored as pipe-separated values)
+// Get personal info details from the new table
 $contactInfo = [];
-if ($personal && !empty($personal['contact_info'])) {
-    $contacts = explode('|', $personal['contact_info']);
-    foreach ($contacts as $contact) {
-        $contact = trim($contact);
-        if (strpos($contact, '@') !== false) {
-            $contactInfo['email'] = $contact;
-        } else if (preg_match('/^\+?[\d\s()\-]+$/', $contact)) { // Fixed regex pattern
-            $contactInfo['phone'] = $contact;
-        } else if (strpos($contact, 'github.com') !== false) {
-            $contactInfo['github'] = $contact;
-        } else if (strpos($contact, 'linkedin.com') !== false) {
-            $contactInfo['linkedin'] = $contact;
-        }
-    }
+$personalDetails = $db->query("SELECT * FROM personal_info_details WHERE resume_id = ?", [$resumeId]);
+foreach ($personalDetails as $detail) {
+    $key = strtolower($detail['detail_name']);
+    $contactInfo[$key] = [
+        'info' => $detail['detail_info'],
+        'icon' => $detail['detail_icon']
+    ];
 }
 
 // Set resume name
@@ -204,12 +197,12 @@ error_log("Resume Name: " . $resumeName);
                         </div>
                         <div class="header-right">
                             <div class="contact-info">
-                                <?php if (!empty($contactInfo['phone'])): ?>
-                                    <span><i class="fas fa-phone"></i> <?php echo htmlspecialchars($contactInfo['phone']); ?></span>
-                                <?php endif; ?>
-                                <?php if (!empty($contactInfo['email'])): ?>
-                                    <span><i class="fas fa-envelope"></i> <?php echo htmlspecialchars($contactInfo['email']); ?></span>
-                                <?php endif; ?>
+                                <?php foreach ($contactInfo as $type => $detail): ?>
+                                    <span>
+                                        <i class="<?php echo htmlspecialchars($detail['icon']); ?>"></i>
+                                        <?php echo htmlspecialchars($detail['info']); ?>
+                                    </span>
+                                <?php endforeach; ?>
                             </div>
                         </div>
                     </div>
