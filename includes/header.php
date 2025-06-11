@@ -1,13 +1,14 @@
 <?php
-// Session handling
-session_start();
+// Include utilities
+require_once dirname(__FILE__) . '/utils.php';
+
+// Session handling (only start if not already started)
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Check for any flash messages
-$flashMessage = null;
-if (isset($_SESSION['message'])) {
-    $flashMessage = $_SESSION['message'];
-    unset($_SESSION['message']);
-}
+$flashMessage = getFlashMessage();
 
 // Get current resume name if editing a specific resume
 $currentResumeName = '';
@@ -129,8 +130,8 @@ if (isset($_GET['resume_id']) && str_contains($_SERVER['PHP_SELF'], 'edit_sectio
     <div class="container">
         <!-- Flash Message -->
         <?php if ($flashMessage): ?>
-        <div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
-            <?php echo $flashMessage; ?>
+        <div class="alert alert-<?php echo $flashMessage['type'] === 'error' ? 'danger' : $flashMessage['type']; ?> alert-dismissible fade show mb-4" role="alert">
+            <?php echo htmlspecialchars($flashMessage['message']); ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
         <?php endif; ?>

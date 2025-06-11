@@ -1,37 +1,55 @@
 <?php
 require_once 'database/db.php';
+require_once 'includes/utils.php';
 
-// Only redirect to resumes.php if no resume_id is provided
-if (!isset($_GET['resume_id'])) {
-    header('Location: edit_sections/resumes.php');
-    exit;
-}
+// Start session for flash messages
+session_start();
 
 // Get database instance
 $db = ResumeDB::getInstance();
 
 // Handle download request
 if (isset($_GET['download']) && $_GET['download'] === 'true') {
+    $resumeId = isset($_GET['resume_id']) ? (int)$_GET['resume_id'] : $db->getDefaultResumeId();
+    if ($resumeId) {
+        $db->trackAnalytics($resumeId, 'download', $_SERVER['HTTP_USER_AGENT'] ?? null, getClientIP());
+    }
     require_once 'export.php';
     exit;
 }
 
-// Set page title and description 
-$pageTitle = 'Resume Preview';
-$pageDescription = 'View your professional resume';
-
 // Get resume ID from URL, fallback to default resume
 $resumeId = isset($_GET['resume_id']) ? (int)$_GET['resume_id'] : null;
+
+// If no resume_id provided, try to get default or redirect to resume management
 if (!$resumeId) {
-    $defaultResume = $db->querySingle("SELECT id FROM resumes WHERE is_default = 1");
-    $resumeId = $defaultResume['id'] ?? null;
+    $resumeId = $db->getDefaultResumeId();
     if (!$resumeId) {
-        die("No resume found. Please create a resume first.");
+        // No resumes exist, redirect to create first resume
+        setFlashMessage('Welcome! Let\'s create your first resume.', 'info');
+        header('Location: edit_sections/resumes.php');
+        exit;
+    } else {
+        // Redirect to the default resume to clean up URL
+        header("Location: index.php?resume_id=$resumeId");
+        exit;
     }
 }
 
-// Debug output
-error_log("Resume ID: " . $resumeId);
+// Verify resume exists
+$resume = $db->querySingle("SELECT * FROM resumes WHERE id = ?", [$resumeId]);
+if (!$resume) {
+    setFlashMessage('Resume not found. Please select a valid resume.', 'error');
+    header('Location: edit_sections/resumes.php');
+    exit;
+}
+
+// Track view analytics
+$db->trackAnalytics($resumeId, 'view', $_SERVER['HTTP_USER_AGENT'] ?? null, getClientIP());
+
+// Set page title and description 
+$pageTitle = 'Resume Preview - ' . htmlspecialchars($resume['name']);
+$pageDescription = 'Preview of ' . htmlspecialchars($resume['name']);
 
 // Get resume data
 $personal = $db->querySingle(
@@ -56,14 +74,6 @@ $projects = $db->query(
     [$resumeId]
 );
 
-// Debug output for each section
-error_log("Personal Info: " . print_r($personal, true));
-error_log("Summary: " . print_r($summary, true));
-error_log("Experiences Count: " . count($experiences));
-error_log("Education Count: " . count($education));
-error_log("Skill Categories Count: " . count($skillCategories));
-error_log("Projects Count: " . count($projects));
-
 // Reset arrays and ensure unique entries
 $experiences = array_values(array_unique($experiences, SORT_REGULAR));
 $skillCategories = array_values(array_unique($skillCategories, SORT_REGULAR));
@@ -85,7 +95,6 @@ foreach ($experiences as &$exp) {
         "SELECT DISTINCT * FROM job_accomplishments WHERE experience_id = ? AND resume_id = ? ORDER BY display_order", 
         [$exp['id'], $resumeId]
     ));
-    error_log("Accomplishments for experience {$exp['id']}: " . count($exp['accomplishments']));
 }
 unset($exp); // unset reference to last element
 
@@ -95,7 +104,6 @@ foreach ($skillCategories as &$category) {
         "SELECT DISTINCT * FROM skills WHERE category_id = ? AND resume_id = ? AND is_visible = 1 ORDER BY display_order", 
         [$category['id'], $resumeId]
     ));
-    error_log("Skills for category {$category['id']}: " . count($category['skills']));
 }
 unset($category); // unset reference to last element
 
@@ -110,12 +118,8 @@ foreach ($personalDetails as $detail) {
     ];
 }
 
-// Set resume name
-$resume = $db->querySingle("SELECT name FROM resumes WHERE id = ?", [$resumeId]);
-$resumeName = $resume ? $resume['name'] : 'Unknown Resume';
-
-// Debug output
-error_log("Resume Name: " . $resumeName);
+// Resume name is already available from earlier query
+$resumeName = $resume['name'];
 ?>
 <html lang="en">
 <head>

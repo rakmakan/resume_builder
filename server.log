@@ -1,0 +1,147 @@
+[Wed Jun 11 00:27:10 2025] PHP 8.2.28 Development Server (http://0.0.0.0:53857) started
+[Wed Jun 11 00:27:18 2025] 127.0.0.1:46016 Accepted
+[Wed Jun 11 00:27:18 2025] 127.0.0.1:46016 [302]: HEAD /
+[Wed Jun 11 00:27:18 2025] 127.0.0.1:46016 Closing
+[Wed Jun 11 00:27:24 2025] 127.0.0.1:39172 Accepted
+[Wed Jun 11 00:27:24 2025] 127.0.0.1:39172 [302]: GET /
+[Wed Jun 11 00:27:24 2025] 127.0.0.1:39172 Closing
+[Wed Jun 11 00:27:24 2025] 127.0.0.1:39186 Accepted
+[Wed Jun 11 00:27:24 2025] 127.0.0.1:39186 [200]: GET /edit_sections/resumes.php
+[Wed Jun 11 00:27:24 2025] 127.0.0.1:39186 Closing
+[Wed Jun 11 00:27:24 2025] 127.0.0.1:39202 Accepted
+[Wed Jun 11 00:27:24 2025] 127.0.0.1:39202 [200]: GET /style.css
+[Wed Jun 11 00:27:24 2025] 127.0.0.1:39202 Closing
+[Wed Jun 11 00:27:35 2025] 127.0.0.1:43126 Accepted
+[Wed Jun 11 00:27:35 2025] 127.0.0.1:43126 [200]: GET /admin.php
+[Wed Jun 11 00:27:35 2025] 127.0.0.1:43126 Closing
+[Wed Jun 11 00:27:35 2025] 127.0.0.1:43132 Accepted
+[Wed Jun 11 00:27:35 2025] 127.0.0.1:43132 [200]: GET /style.css
+[Wed Jun 11 00:27:35 2025] 127.0.0.1:43132 Closing
+[Wed Jun 11 00:27:43 2025] 127.0.0.1:43136 Accepted
+[Wed Jun 11 00:27:43 2025] 127.0.0.1:43136 [302]: GET /index.php
+[Wed Jun 11 00:27:43 2025] 127.0.0.1:43136 Closing
+[Wed Jun 11 00:27:43 2025] 127.0.0.1:43146 Accepted
+[Wed Jun 11 00:27:43 2025] 127.0.0.1:43146 [200]: GET /edit_sections/resumes.php
+[Wed Jun 11 00:27:43 2025] 127.0.0.1:43146 Closing
+[Wed Jun 11 00:27:43 2025] 127.0.0.1:43150 Accepted
+[Wed Jun 11 00:27:43 2025] 127.0.0.1:43150 [200]: GET /style.css
+[Wed Jun 11 00:27:43 2025] 127.0.0.1:43150 Closing
+[Wed Jun 11 00:27:54 2025] 127.0.0.1:44172 Accepted
+[Wed Jun 11 00:27:54 2025] Resume ID: 6
+[Wed Jun 11 00:27:54 2025] Personal Info: Array
+(
+    [id] => 19
+    [resume_id] => 6
+    [name] => Rakshit Makan
+    [contact_info] => rakshitmakan@gmail.com | 5142333618
+    [updated_at] => 2025-06-04 04:10:10
+)
+
+[Wed Jun 11 00:27:54 2025] Summary: Array
+(
+    [id] => 6
+    [resume_id] => 6
+    [content] => AI Software Engineer with over 5 years of experience in building and deploying AI-powered applications, specializing in generative AI and multimodal systems. Proficient in Python and experienced with key technologies such as Docker, AWS, and ML frameworks like PyTorch and Hugging Face Transformers. Achievements include optimizing AI inference speed resulting in a 30% decrease in latency, successfully launching a community-driven AI tool that increased user engagement by 50%, and contributing to open-source AI projects that garnered over 10k downloads. Renowned for leading cross-functional teams in Agile environments to innovate and drive high-impact AI solutions.
+    [updated_at] => 2025-05-26 03:19:11
+)
+
+[Wed Jun 11 00:27:54 2025] Experiences Count: 0
+[Wed Jun 11 00:27:54 2025] Education Count: 0
+[Wed Jun 11 00:27:54 2025] Skill Categories Count: 0
+[Wed Jun 11 00:27:54 2025] Projects Count: 0
+[Wed Jun 11 00:27:54 2025] Resume Name: Resume for Chubb
+[Wed Jun 11 00:27:54 2025] 127.0.0.1:44172 [200]: GET /index.php?resume_id=6
+[Wed Jun 11 00:27:54 2025] 127.0.0.1:44172 Closing
+[Wed Jun 11 00:27:54 2025] 127.0.0.1:44176 Accepted
+[Wed Jun 11 00:27:54 2025] 127.0.0.1:44176 [200]: GET /style.css
+[Wed Jun 11 00:27:54 2025] 127.0.0.1:44176 Closing
+[Wed Jun 11 00:30:09 2025] 172.17.0.1:58886 Accepted
+[Wed Jun 11 00:30:09 2025] 172.17.0.1:58886 [302]: GET /
+[Wed Jun 11 00:30:09 2025] 172.17.0.1:58886 Closing
+[Wed Jun 11 00:31:13 2025] 172.17.0.1:59898 Accepted
+[Wed Jun 11 00:31:13 2025] 172.17.0.1:59898 [302]: GET /
+[Wed Jun 11 00:31:13 2025] 172.17.0.1:59898 Closing
+[Wed Jun 11 00:32:17 2025] 172.17.0.1:62262 Accepted
+[Wed Jun 11 00:32:17 2025] 172.17.0.1:62262 [302]: GET /
+[Wed Jun 11 00:32:17 2025] 172.17.0.1:62262 Closing
+[Wed Jun 11 00:34:22 2025] 172.17.0.1:57524 Accepted
+[Wed Jun 11 00:34:22 2025] 172.17.0.1:57524 [302]: GET /
+[Wed Jun 11 00:34:22 2025] 172.17.0.1:57524 Closing
+[Wed Jun 11 00:35:02 2025] 127.0.0.1:50312 Accepted
+[Wed Jun 11 00:35:02 2025] 127.0.0.1:50312 [302]: GET /
+[Wed Jun 11 00:35:02 2025] 127.0.0.1:50312 Closing
+[Wed Jun 11 00:35:02 2025] 127.0.0.1:50314 Accepted
+[Wed Jun 11 00:35:02 2025] 127.0.0.1:50314 [200]: GET /index.php?resume_id=6
+[Wed Jun 11 00:35:02 2025] 127.0.0.1:50314 Closing
+[Wed Jun 11 00:35:02 2025] 127.0.0.1:50322 Accepted
+[Wed Jun 11 00:35:02 2025] 127.0.0.1:50322 [200]: GET /style.css
+[Wed Jun 11 00:35:02 2025] 127.0.0.1:50322 Closing
+[Wed Jun 11 00:35:14 2025] 127.0.0.1:54212 Accepted
+[Wed Jun 11 00:35:14 2025] 127.0.0.1:54212 [200]: GET /admin.php
+[Wed Jun 11 00:35:14 2025] 127.0.0.1:54212 Closing
+[Wed Jun 11 00:35:14 2025] 127.0.0.1:54224 Accepted
+[Wed Jun 11 00:35:14 2025] 127.0.0.1:54224 [200]: GET /style.css
+[Wed Jun 11 00:35:14 2025] 127.0.0.1:54224 Closing
+[Wed Jun 11 00:36:32 2025] 172.17.0.1:55380 Accepted
+[Wed Jun 11 00:36:32 2025] 172.17.0.1:55386 Accepted
+[Wed Jun 11 00:36:33 2025] 172.17.0.1:55386 [200]: GET /admin.php
+[Wed Jun 11 00:36:33 2025] 172.17.0.1:55386 Closing
+[Wed Jun 11 00:36:33 2025] 172.17.0.1:55380 [200]: GET /style.css
+[Wed Jun 11 00:36:33 2025] 172.17.0.1:55380 Closing
+[Wed Jun 11 00:36:33 2025] 172.17.0.1:55400 Accepted
+[Wed Jun 11 00:36:33 2025] 172.17.0.1:55400 [404]: GET /favicon.ico - No such file or directory
+[Wed Jun 11 00:36:33 2025] 172.17.0.1:55400 Closing
+[Wed Jun 11 00:36:39 2025] 172.17.0.1:60840 Accepted
+[Wed Jun 11 00:36:39 2025] 172.17.0.1:60840 [200]: GET /edit_sections/resumes.php
+[Wed Jun 11 00:36:39 2025] 172.17.0.1:60840 Closing
+[Wed Jun 11 00:36:39 2025] 172.17.0.1:60844 Accepted
+[Wed Jun 11 00:36:39 2025] 172.17.0.1:60844 [200]: GET /style.css
+[Wed Jun 11 00:36:39 2025] 172.17.0.1:60844 Closing
+[Wed Jun 11 00:36:42 2025] 172.17.0.1:60856 Accepted
+[Wed Jun 11 00:36:42 2025] 172.17.0.1:60856 [200]: GET /index.php?resume_id=6
+[Wed Jun 11 00:36:42 2025] 172.17.0.1:60856 Closing
+[Wed Jun 11 00:36:42 2025] 172.17.0.1:60858 Accepted
+[Wed Jun 11 00:36:42 2025] 172.17.0.1:60858 [200]: GET /style.css
+[Wed Jun 11 00:36:42 2025] 172.17.0.1:60858 Closing
+[Wed Jun 11 00:36:53 2025] 172.17.0.1:56188 Accepted
+[Wed Jun 11 00:36:54 2025] 172.17.0.1:56188 [200]: GET /index.php?download=true&resume_id=6
+[Wed Jun 11 00:36:54 2025] 172.17.0.1:56188 Closing
+[Wed Jun 11 00:36:54 2025] 172.17.0.1:56190 Accepted
+[Wed Jun 11 00:36:54 2025] 172.17.0.1:56190 Closed without sending a request; it was probably just an unused speculative preconnection
+[Wed Jun 11 00:36:54 2025] 172.17.0.1:56190 Closing
+[Wed Jun 11 00:37:09 2025] 172.17.0.1:58912 Accepted
+[Wed Jun 11 00:37:09 2025] 172.17.0.1:58912 [302]: GET /
+[Wed Jun 11 00:37:09 2025] 172.17.0.1:58912 Closing
+[Wed Jun 11 00:37:19 2025] 172.17.0.1:60458 Accepted
+[Wed Jun 11 00:37:19 2025] 172.17.0.1:60458 [200]: GET /admin.php
+[Wed Jun 11 00:37:19 2025] 172.17.0.1:60458 Closing
+[Wed Jun 11 00:37:19 2025] 172.17.0.1:60462 Accepted
+[Wed Jun 11 00:37:19 2025] 172.17.0.1:60462 [200]: GET /style.css
+[Wed Jun 11 00:37:19 2025] 172.17.0.1:60462 Closing
+[Wed Jun 11 00:37:28 2025] 172.17.0.1:64844 Accepted
+[Wed Jun 11 00:37:28 2025] 172.17.0.1:64844 [200]: GET /edit_sections/skills.php
+[Wed Jun 11 00:37:28 2025] 172.17.0.1:64844 Closing
+[Wed Jun 11 00:37:28 2025] 172.17.0.1:64850 Accepted
+[Wed Jun 11 00:37:28 2025] 172.17.0.1:64862 Accepted
+[Wed Jun 11 00:37:28 2025] 172.17.0.1:64850 [200]: GET /style.css
+[Wed Jun 11 00:37:28 2025] 172.17.0.1:64862 [200]: GET /assets/js/skills-manager.js
+[Wed Jun 11 00:37:28 2025] 172.17.0.1:64850 Closing
+[Wed Jun 11 00:37:28 2025] 172.17.0.1:64862 Closing
+[Wed Jun 11 00:37:41 2025] 172.17.0.1:55366 Accepted
+[Wed Jun 11 00:37:41 2025] 172.17.0.1:55380 Accepted
+[Wed Jun 11 00:37:41 2025] 172.17.0.1:55366 [200]: GET /admin.php
+[Wed Jun 11 00:37:41 2025] 172.17.0.1:55366 Closing
+[Wed Jun 11 00:37:44 2025] 172.17.0.1:55380 Closed without sending a request; it was probably just an unused speculative preconnection
+[Wed Jun 11 00:37:44 2025] 172.17.0.1:55380 Closing
+[Wed Jun 11 00:37:45 2025] 172.17.0.1:59312 Accepted
+[Wed Jun 11 00:37:45 2025] 172.17.0.1:59312 [302]: GET /
+[Wed Jun 11 00:37:45 2025] 172.17.0.1:59312 Closing
+[Wed Jun 11 00:39:48 2025] 172.17.0.1:63378 Accepted
+[Wed Jun 11 00:39:48 2025] 172.17.0.1:63378 [302]: GET /
+[Wed Jun 11 00:39:48 2025] 172.17.0.1:63378 Closing
+[Wed Jun 11 00:40:45 2025] 172.17.0.1:57500 Accepted
+[Wed Jun 11 00:40:45 2025] 172.17.0.1:57500 [302]: GET /
+[Wed Jun 11 00:40:45 2025] 172.17.0.1:57500 Closing
+[Wed Jun 11 00:42:04 2025] 172.17.0.1:61828 Accepted
+[Wed Jun 11 00:42:04 2025] 172.17.0.1:61828 [302]: GET /
+[Wed Jun 11 00:42:04 2025] 172.17.0.1:61828 Closing
