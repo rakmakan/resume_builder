@@ -87,7 +87,7 @@ require_once '../includes/header.php';
     </div>
     <?php endif; ?>
 
-    <?php displayBreadcrumbs($resumeName, 'Personal Information'); ?>
+    <?php displayBreadcrumbs($resumeName, 'Personal Information', $resumeId); ?>
 
     <div class="row">
         <div class="col-md-3">
@@ -165,8 +165,8 @@ require_once '../includes/header.php';
                         </div>
                         
                         <div class="d-flex justify-content-between">
-                            <a href="resumes.php" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left me-1"></i>Back to Resumes
+                            <a href="../admin.php?resume_id=<?php echo $resumeId; ?>" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
                             </a>
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save me-1"></i>Save Changes

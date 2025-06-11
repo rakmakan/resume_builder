@@ -247,12 +247,16 @@ require_once '../includes/header.php';
                                 <?php endif; ?>
                             </td>
                             <td>                            <div class="btn-group" role="group">
+                                <a href="../admin.php?resume_id=<?php echo $resume['id']; ?>" 
+                                   class="btn btn-sm btn-primary" title="Manage Resume">
+                                    <i class="fas fa-cog"></i>
+                                </a>
                                 <a href="../index.php?resume_id=<?php echo $resume['id']; ?>" target="_blank" 
                                    class="btn btn-sm btn-outline-info" title="Preview Resume">
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 <a href="../edit_sections/personal_info.php?resume_id=<?php echo $resume['id']; ?>" 
-                                       class="btn btn-sm btn-outline-primary" title="Edit Resume">
+                                       class="btn btn-sm btn-outline-secondary" title="Quick Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <a href="../export.php?id=<?php echo $resume['id']; ?>" 

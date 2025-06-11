@@ -1,43 +1,80 @@
 <?php
 require_once 'database/db.php';
 require_once 'includes/utils.php';
+require_once 'edit_sections/common.php';
 
 // Start session
 session_start();
 
-// Set page title and description
-$pageTitle = 'Resume Dashboard';
-$pageDescription = 'Manage your resume sections and content in one place';
-
 // Get database instance
 $db = ResumeDB::getInstance();
 
-// Get overall statistics
-$overallStats = $db->getResumeStats();
-$totalResumes = count($db->query("SELECT * FROM resumes"));
+// Get resume ID from URL parameter
+$resumeId = getResumeId($db);
+$resumeName = getResumeName($db, $resumeId);
 
-// Count entries in each section (across all resumes)
-$personalCount = count($db->query("SELECT * FROM personal_info"));
-$educationCount = count($db->query("SELECT * FROM education WHERE is_visible = 1"));
-$skillCategoriesCount = count($db->query("SELECT * FROM skill_categories WHERE is_visible = 1"));
-$skillsCount = count($db->query("SELECT * FROM skills WHERE is_visible = 1"));
-$experienceCount = count($db->query("SELECT * FROM experience WHERE is_visible = 1"));
-$projectsCount = count($db->query("SELECT * FROM projects WHERE is_visible = 1"));
+// Verify resume exists
+$resume = $db->querySingle("SELECT * FROM resumes WHERE id = ?", [$resumeId]);
+if (!$resume) {
+    header('Location: edit_sections/resumes.php');
+    exit;
+}
 
-// Get recent activity (last 5 resumes viewed/updated)
-$recentResumes = $db->query(
-    "SELECT id, name, last_viewed_at, view_count, download_count, updated_at 
-     FROM resumes 
-     ORDER BY COALESCE(last_viewed_at, updated_at) DESC 
-     LIMIT 5"
-);
+// Set page title and description
+$pageTitle = 'Manage Resume: ' . $resumeName;
+$pageDescription = 'Manage sections and content for ' . $resumeName;
+
+// Get resume-specific statistics
+$resumeStats = $db->getResumeStats($resumeId);
+
+// Count entries in each section for this specific resume
+$personalCount = count($db->query("SELECT * FROM personal_info WHERE resume_id = ?", [$resumeId]));
+$educationCount = count($db->query("SELECT * FROM education WHERE resume_id = ? AND is_visible = 1", [$resumeId]));
+$skillCategoriesCount = count($db->query("SELECT * FROM skill_categories WHERE resume_id = ? AND is_visible = 1", [$resumeId]));
+$skillsCount = count($db->query("SELECT * FROM skills WHERE resume_id = ? AND is_visible = 1", [$resumeId]));
+$experienceCount = count($db->query("SELECT * FROM experience WHERE resume_id = ? AND is_visible = 1", [$resumeId]));
+$projectsCount = count($db->query("SELECT * FROM projects WHERE resume_id = ? AND is_visible = 1", [$resumeId]));
+
+// Get summary for this resume
+$summaryExists = $db->querySingle("SELECT id FROM summary WHERE resume_id = ?", [$resumeId]) ? 1 : 0;
 
 // Include header
 require_once 'includes/header.php';
 ?>
 
+<!-- Breadcrumb Navigation -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="edit_sections/resumes.php">All Resumes</a></li>
+        <li class="breadcrumb-item active" aria-current="page"><?php echo htmlspecialchars($resumeName); ?></li>
+    </ol>
+</nav>
+
+<!-- Resume Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-1"><?php echo htmlspecialchars($resumeName); ?></h1>
+                <p class="text-muted mb-0"><?php echo htmlspecialchars($resume['description'] ?: 'No description'); ?></p>
+            </div>
+            <div class="btn-group">
+                <a href="index.php?resume_id=<?php echo $resumeId; ?>" target="_blank" class="btn btn-outline-primary">
+                    <i class="fas fa-eye me-1"></i>Preview
+                </a>
+                <a href="export.php?id=<?php echo $resumeId; ?>" class="btn btn-outline-success">
+                    <i class="fas fa-download me-1"></i>Download PDF
+                </a>
+                <a href="edit_sections/resumes.php" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to All Resumes
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Analytics Overview -->
-<?php if ($overallStats && ($overallStats['total_views'] > 0 || $overallStats['total_downloads'] > 0)): ?>
+<?php if ($resumeStats && ($resumeStats['view_count'] > 0 || $resumeStats['download_count'] > 0)): ?>
 <div class="row mb-4">
     <div class="col-12">
         <div class="card bg-light">
@@ -48,27 +85,21 @@ require_once 'includes/header.php';
             </div>
             <div class="card-body">
                 <div class="row text-center">
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="border-end">
-                            <h3 class="text-primary"><?php echo $totalResumes; ?></h3>
-                            <small class="text-muted">Total Resumes</small>
+                            <h3 class="text-success"><?php echo $resumeStats['view_count'] ?? 0; ?></h3>
+                            <small class="text-muted">Views</small>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="border-end">
-                            <h3 class="text-success"><?php echo $overallStats['total_views'] ?? 0; ?></h3>
-                            <small class="text-muted">Total Views</small>
+                            <h3 class="text-info"><?php echo $resumeStats['download_count'] ?? 0; ?></h3>
+                            <small class="text-muted">Downloads</small>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="border-end">
-                            <h3 class="text-info"><?php echo $overallStats['total_downloads'] ?? 0; ?></h3>
-                            <small class="text-muted">Total Downloads</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <h3 class="text-warning"><?php echo $overallStats['last_activity'] ? formatDate($overallStats['last_activity'], 'M j') : 'Never'; ?></h3>
-                        <small class="text-muted">Last Activity</small>
+                    <div class="col-md-4">
+                        <h3 class="text-warning"><?php echo $resumeStats['last_viewed_at'] ? formatDate($resumeStats['last_viewed_at'], 'M j') : 'Never'; ?></h3>
+                        <small class="text-muted">Last Viewed</small>
                     </div>
                 </div>
             </div>
@@ -79,28 +110,6 @@ require_once 'includes/header.php';
 
 <!-- Dashboard Cards -->
 <div class="row g-4">
-    <!-- Resume Versions Card -->
-    <div class="col-md-6 col-lg-4">
-        <div class="card h-100">
-            <div class="card-header bg-primary text-white">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-file-alt me-2"></i>Resume Versions
-                </h5>
-            </div>
-            <div class="card-body d-flex flex-column">
-                <div class="text-center mb-3">
-                    <span class="display-3 text-primary"><?php echo $totalResumes; ?></span>
-                    <p class="lead">Versions</p>
-                </div>
-                <p class="card-text">Manage multiple versions of your resume for different job applications.</p>
-                <div class="mt-auto text-center">
-                    <a href="edit_sections/resumes.php" class="btn btn-primary">
-                        <i class="fas fa-tasks me-1"></i>Manage Resumes
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Personal Information Card -->
     <div class="col-md-6 col-lg-4">
@@ -117,7 +126,7 @@ require_once 'includes/header.php';
                 </div>
                 <p class="card-text">Your name, contact information, and other personal details.</p>
                 <div class="mt-auto text-center">
-                    <a href="edit_sections/personal_info.php" class="btn btn-primary">
+                    <a href="edit_sections/personal_info.php?resume_id=<?php echo $resumeId; ?>" class="btn btn-primary">
                         <i class="fas fa-edit me-1"></i>Edit Information
                     </a>
                 </div>
@@ -135,12 +144,12 @@ require_once 'includes/header.php';
             </div>
             <div class="card-body d-flex flex-column">
                 <div class="text-center mb-3">
-                    <span class="display-3 text-primary">1</span>
-                    <p class="lead">Section</p>
+                    <span class="display-3 text-primary"><?php echo $summaryExists; ?></span>
+                    <p class="lead"><?php echo $summaryExists ? 'Complete' : 'Missing'; ?></p>
                 </div>
                 <p class="card-text">A concise overview of your professional background and key strengths.</p>
                 <div class="mt-auto text-center">
-                    <a href="edit_sections/summary.php" class="btn btn-primary">
+                    <a href="edit_sections/summary.php?resume_id=<?php echo $resumeId; ?>" class="btn btn-primary">
                         <i class="fas fa-edit me-1"></i>Edit Summary
                     </a>
                 </div>
@@ -164,10 +173,10 @@ require_once 'includes/header.php';
                 <p class="card-text">Academic qualifications, degrees, certifications, and training.</p>
                 <div class="mt-auto">
                     <div class="d-grid gap-2">
-                        <a href="edit_sections/education.php" class="btn btn-primary">
+                        <a href="edit_sections/education.php?resume_id=<?php echo $resumeId; ?>" class="btn btn-primary">
                             <i class="fas fa-list me-1"></i>Manage Education
                         </a>
-                        <a href="edit_sections/education_add.php" class="btn btn-outline-primary">
+                        <a href="edit_sections/education.php?resume_id=<?php echo $resumeId; ?>&action=add" class="btn btn-outline-primary">
                             <i class="fas fa-plus me-1"></i>Add New Qualification
                         </a>
                     </div>
@@ -200,10 +209,10 @@ require_once 'includes/header.php';
                 <p class="card-text">Technical, professional, and soft skills organized by category.</p>
                 <div class="mt-auto">
                     <div class="d-grid gap-2">
-                        <a href="edit_sections/skills.php" class="btn btn-primary">
+                        <a href="edit_sections/skills.php?resume_id=<?php echo $resumeId; ?>" class="btn btn-primary">
                             <i class="fas fa-list me-1"></i>Manage Skills
                         </a>
-                        <a href="edit_sections/skills_add.php" class="btn btn-outline-primary">
+                        <a href="edit_sections/skills.php?resume_id=<?php echo $resumeId; ?>&action=add" class="btn btn-outline-primary">
                             <i class="fas fa-plus me-1"></i>Add New Skill
                         </a>
                     </div>
@@ -228,10 +237,10 @@ require_once 'includes/header.php';
                 <p class="card-text">Current and previous job roles, responsibilities, and accomplishments.</p>
                 <div class="mt-auto">
                     <div class="d-grid gap-2">
-                        <a href="edit_sections/experience.php" class="btn btn-primary">
+                        <a href="edit_sections/experience.php?resume_id=<?php echo $resumeId; ?>" class="btn btn-primary">
                             <i class="fas fa-list me-1"></i>Manage Experience
                         </a>
-                        <a href="edit_sections/experience_add.php" class="btn btn-outline-primary">
+                        <a href="edit_sections/experience_add.php?resume_id=<?php echo $resumeId; ?>" class="btn btn-outline-primary">
                             <i class="fas fa-plus me-1"></i>Add New Position
                         </a>
                     </div>
@@ -256,10 +265,10 @@ require_once 'includes/header.php';
                 <p class="card-text">Significant projects, portfolio items, and notable achievements.</p>
                 <div class="mt-auto">
                     <div class="d-grid gap-2">
-                        <a href="edit_sections/projects.php" class="btn btn-primary">
+                        <a href="edit_sections/projects.php?resume_id=<?php echo $resumeId; ?>" class="btn btn-primary">
                             <i class="fas fa-list me-1"></i>Manage Projects
                         </a>
-                        <a href="edit_sections/projects_add.php" class="btn btn-outline-primary">
+                        <a href="edit_sections/projects.php?resume_id=<?php echo $resumeId; ?>&action=add" class="btn btn-outline-primary">
                             <i class="fas fa-plus me-1"></i>Add New Project
                         </a>
                     </div>
@@ -269,70 +278,7 @@ require_once 'includes/header.php';
     </div>
 </div>
 
-<!-- Recent Activity -->
-<?php if (!empty($recentResumes)): ?>
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header bg-info text-white">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-clock me-2"></i>Recent Activity
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Resume</th>
-                                <th>Views</th>
-                                <th>Downloads</th>
-                                <th>Last Activity</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($recentResumes as $resume): ?>
-                            <tr>
-                                <td>
-                                    <strong><?php echo htmlspecialchars($resume['name']); ?></strong>
-                                </td>
-                                <td>
-                                    <span class="badge bg-success"><?php echo $resume['view_count'] ?? 0; ?></span>
-                                </td>
-                                <td>
-                                    <span class="badge bg-info"><?php echo $resume['download_count'] ?? 0; ?></span>
-                                </td>
-                                <td>
-                                    <small class="text-muted">
-                                        <?php 
-                                        $lastActivity = $resume['last_viewed_at'] ?: $resume['updated_at'];
-                                        echo $lastActivity ? formatDate($lastActivity, 'M j, g:i A') : 'Never';
-                                        ?>
-                                    </small>
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="index.php?resume_id=<?php echo $resume['id']; ?>" 
-                                           class="btn btn-outline-primary btn-sm" title="Preview">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="edit_sections/personal_info.php?resume_id=<?php echo $resume['id']; ?>" 
-                                           class="btn btn-outline-secondary btn-sm" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
+
 
 <!-- Quick Actions -->
 <div class="row mt-4">
@@ -347,29 +293,29 @@ require_once 'includes/header.php';
                 <div class="row g-3">
                     <div class="col-md-3">
                         <div class="d-grid">
-                            <a href="edit_sections/resumes.php" class="btn btn-outline-primary btn-lg">
-                                <i class="fas fa-plus me-2"></i>New Resume
-                            </a>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="d-grid">
-                            <a href="index.php" target="_blank" class="btn btn-outline-info btn-lg">
+                            <a href="index.php?resume_id=<?php echo $resumeId; ?>" target="_blank" class="btn btn-outline-info btn-lg">
                                 <i class="fas fa-eye me-2"></i>Preview Resume
                             </a>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="d-grid">
-                            <a href="index.php?download=true" class="btn btn-outline-success btn-lg">
+                            <a href="export.php?id=<?php echo $resumeId; ?>" class="btn btn-outline-success btn-lg">
                                 <i class="fas fa-download me-2"></i>Download PDF
                             </a>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="d-grid">
-                            <a href="edit_sections/resumes.php" class="btn btn-outline-dark btn-lg">
-                                <i class="fas fa-cog me-2"></i>Manage All
+                            <a href="edit_sections/resumes.php" class="btn btn-outline-primary btn-lg">
+                                <i class="fas fa-list me-2"></i>All Resumes
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-grid">
+                            <a href="edit_sections/resumes.php" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-plus me-2"></i>New Resume
                             </a>
                         </div>
                     </div>

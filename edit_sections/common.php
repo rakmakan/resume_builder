@@ -135,13 +135,16 @@ function displaySectionNav($resumeId, $currentSection) {
 }
 
 // Display breadcrumb navigation
-function displayBreadcrumbs($resumeName, $sectionName) {
+function displayBreadcrumbs($resumeName, $sectionName, $resumeId = null) {
     echo '<nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="../admin.php">Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="resumes.php">Resumes</a></li>
-            <li class="breadcrumb-item">' . htmlspecialchars($resumeName) . '</li>
-            <li class="breadcrumb-item active">' . htmlspecialchars($sectionName) . '</li>
+            <li class="breadcrumb-item"><a href="resumes.php">All Resumes</a></li>';
+    if ($resumeId) {
+        echo '<li class="breadcrumb-item"><a href="../admin.php?resume_id=' . $resumeId . '">' . htmlspecialchars($resumeName) . '</a></li>';
+    } else {
+        echo '<li class="breadcrumb-item">' . htmlspecialchars($resumeName) . '</li>';
+    }
+    echo '<li class="breadcrumb-item active">' . htmlspecialchars($sectionName) . '</li>
         </ol>
     </nav>';
 }
@@ -275,11 +278,16 @@ function displayHeader($title) {
 }
 
 // Function to display common page footer
-function displayFooter() {
+function displayFooter($resumeId = null) {
     ?>
             <div class="footer-links">
-                <a href="../admin.php">Back to Dashboard</a>
-                <a href="../index.php">View Resume</a>
+                <?php if ($resumeId): ?>
+                    <a href="../admin.php?resume_id=<?php echo $resumeId; ?>">Back to Resume Dashboard</a>
+                    <a href="../index.php?resume_id=<?php echo $resumeId; ?>">View Resume</a>
+                <?php else: ?>
+                    <a href="resumes.php">Back to Resumes</a>
+                    <a href="../index.php">View Resume</a>
+                <?php endif; ?>
             </div>
         </div>
     </body>
