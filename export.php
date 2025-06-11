@@ -9,7 +9,7 @@ use Dompdf\Options;
 $db = ResumeDB::getInstance();
 
 // Get resume ID from URL parameter or use default resume
-$resumeId = isset($_GET['resume_id']) ? (int)$_GET['resume_id'] : null;
+$resumeId = isset($_GET['resume_id']) ? (int)$_GET['resume_id'] : (isset($_GET['id']) ? (int)$_GET['id'] : null);
 
 if ($resumeId) {
     $resume = $db->querySingle("SELECT * FROM resumes WHERE id = ?", [$resumeId]);
