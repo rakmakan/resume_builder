@@ -1,0 +1,12 @@
+{
+  "database": {
+    "type": "sqlite",
+    "path": "../database/resume.sqlite",
+    "absolute_path": "/Users/rakshitmakan/Documents/resume_builder/database/resume.sqlite"
+  },
+  "backup": {
+    "enabled": true,
+    "directory": "../database/backups",
+    "retention_days": 30
+  }
+}

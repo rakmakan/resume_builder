@@ -1,0 +1,110 @@
+# Resume Builder Docker Compose Configuration
+
+services:
+  # Database service - SQLite with persistent volume
+  database:
+    image: alpine:latest
+    container_name: resume_db
+    volumes:
+      - ./database:/app/database
+      - ./docker/db-init:/docker-entrypoint-initdb.d
+      - db_data:/app/data
+    command: |
+      sh -c "
+        apk add --no-cache sqlite &&
+        mkdir -p /app/data &&
+        if [ ! -f /app/data/resume.sqlite ] && [ -f /app/database/resume.sqlite ]; then
+          echo 'Copying existing database...' &&
+          cp /app/database/resume.sqlite /app/data/resume.sqlite
+        elif [ ! -f /app/data/resume.sqlite ]; then
+          echo 'Creating new database...' &&
+          touch /app/data/resume.sqlite
+        fi &&
+        echo 'Database service ready' &&
+        tail -f /dev/null
+      "
+    networks:
+      - resume_network
+    restart: unless-stopped
+
+  # Python Backend service
+  backend:
+    build:
+      context: ./resume_builder_backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: resume_backend
+    volumes:
+      - ./resume_builder_backend:/app
+      - ./config:/config
+      - ./shared:/shared
+      - db_data:/app/database
+    environment:
+      - PYTHONPATH=/app
+      - DATABASE_PATH=/app/database/resume.sqlite
+    ports:
+      - "8001:8001"
+    depends_on:
+      - database
+    networks:
+      - resume_network
+    restart: unless-stopped
+    command: ["python", "api_server.py"]
+
+  # PHP Frontend service
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    container_name: resume_frontend
+    volumes:
+      - .:/var/www/html
+      - db_data:/var/www/html/database_docker
+    environment:
+      - DOCKER_MODE=true
+      - DATABASE_PATH=/var/www/html/database_docker/resume.sqlite
+    ports:
+      - "8000:80"
+    depends_on:
+      - database
+      - backend
+    networks:
+      - resume_network
+    restart: unless-stopped
+
+  # Backup service (runs periodically)
+  backup:
+    image: alpine:latest
+    container_name: resume_backup
+    volumes:
+      - db_data:/app/database
+      - ./database/backups:/app/backups
+    environment:
+      - BACKUP_INTERVAL=3600  # 1 hour in seconds
+    command: |
+      sh -c "
+        apk add --no-cache sqlite &&
+        mkdir -p /app/backups &&
+        while true; do
+          if [ -f /app/database/resume.sqlite ]; then
+            TIMESTAMP=$$(date +%Y%m%d_%H%M%S) &&
+            echo 'Creating backup: backup_$$TIMESTAMP.sqlite' &&
+            cp /app/database/resume.sqlite /app/backups/backup_$$TIMESTAMP.sqlite &&
+            # Keep only last 10 backups
+            ls -t /app/backups/backup_*.sqlite | tail -n +11 | xargs -r rm
+          fi &&
+          sleep $$BACKUP_INTERVAL
+        done
+      "
+    depends_on:
+      - database
+    networks:
+      - resume_network
+    restart: unless-stopped
+
+volumes:
+  db_data:
+    driver: local
+
+networks:
+  resume_network:
+    driver: bridge

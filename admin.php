@@ -3,8 +3,10 @@ require_once 'database/db.php';
 require_once 'includes/utils.php';
 require_once 'edit_sections/common.php';
 
-// Start session
-session_start();
+// Start session (only if not already started)
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Get database instance
 $db = ResumeDB::getInstance();

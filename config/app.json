@@ -1,0 +1,21 @@
+{
+  "app": {
+    "name": "Resume Builder",
+    "version": "2.0.0",
+    "environment": "development"
+  },
+  "paths": {
+    "root": "/Users/rakshitmakan/Documents/resume_builder",
+    "frontend": "/Users/rakshitmakan/Documents/resume_builder/frontend",
+    "backend": "/Users/rakshitmakan/Documents/resume_builder/backend",
+    "database": "/Users/rakshitmakan/Documents/resume_builder/database",
+    "exports": "/Users/rakshitmakan/Documents/resume_builder/exports"
+  },
+  "backend": {
+    "python_path": "python3",
+    "main_script": "backend/main.py"
+  },
+  "frontend": {
+    "base_url": "http://localhost:8000"
+  }
+}

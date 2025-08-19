@@ -57,6 +57,23 @@ if (isset($_GET['resume_id']) && str_contains($_SERVER['PHP_SELF'], 'edit_sectio
                             <i class="fas fa-columns me-1"></i>Dashboard
                         </a>
                     </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-robot me-1"></i>AI Backend
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="<?php echo str_contains($_SERVER['PHP_SELF'], 'edit_sections') ? '../ai_workflow_dashboard.php' : 'ai_workflow_dashboard.php'; ?>">
+                                    <i class="fas fa-tasks me-2"></i>AI Workflow
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="<?php echo str_contains($_SERVER['PHP_SELF'], 'edit_sections') ? '../backend_dashboard.php' : 'backend_dashboard.php'; ?>">
+                                    <i class="fas fa-cogs me-2"></i>API Dashboard
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
                     <?php if (isset($_GET['resume_id'])): ?>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">

@@ -11,7 +11,9 @@ class ResumeDB {
      * Private constructor to enforce singleton pattern
      */
     private function __construct() {
-        $dbFile = __DIR__ . '/resume.sqlite';
+        // Load centralized config
+        require_once __DIR__ . '/../shared/config_loader.php';
+        $dbFile = ConfigLoader::getDatabasePath();
         $createTables = !file_exists($dbFile);
         
         try {
